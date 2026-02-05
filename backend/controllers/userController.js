@@ -11,7 +11,7 @@ const generateToken=(user)=>
   const payload=
   {
     
-    userName:user.userName,
+    userName:user.username,
     email:user.email,
     role:user.role
   }
