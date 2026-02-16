@@ -22,7 +22,8 @@ export const sql=neon(`postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABA
      Rating numeric(3,2),
      Trailer TEXT,
      ReleaseYear INT,
-     Country VARCHAR(100)
+     Country VARCHAR(100),
+     Type VARCHAR(50) NOT NULL
    );`
 
 

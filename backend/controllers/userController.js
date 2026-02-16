@@ -19,7 +19,7 @@ const generateToken=(user)=>
 };
 
 
-//-------------signUp-------------
+//signUp
 
 export const signUp=async(req,res)=>
 {
@@ -66,7 +66,7 @@ export const signUp=async(req,res)=>
      }
 };
 
-//------------------LogIN----------------
+//LogIN
     export const login=async(req,res)=>
     {
         try
