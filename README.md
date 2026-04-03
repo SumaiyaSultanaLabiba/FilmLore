@@ -64,4 +64,4 @@ Finally, open http://localhost:5173 in your browser. InshaAllah, you will see th
 
 ### Explore Our Movieverse
 
-If you would like to explore our hosted site, please follow the link: []()
+If you would like to explore our hosted site, please follow the link: [https://filmlore-frontend.onrender.com](https://filmlore-frontend.onrender.com)
