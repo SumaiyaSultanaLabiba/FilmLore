@@ -41,6 +41,22 @@ Set EMAIL_USER to an email address that is logged in on your machine.
 
 For EMAIL_PASS, you cannot simply use your Gmail account password. Instead, generate an App Password from your Gmail account settings and use that here.
 
+Your .env should be like this:
+```bash
+PORT = 5004
+
+PGUSER = ''
+PGPASSWORD = ''
+PGHOST = ''
+PGDATABASE = ''
+
+TOKEN_SECRET=mySuperSecretKey123
+
+EMAIL_USER=
+EMAIL_PASS=
+```
+Now keep your .env at the project root.
+
 For your convenience, all necessary dependencies are already provided, so you do not need to install anything manually.
 
 Finally, open http://localhost:5173 in your browser. InshaAllah, you will see the application running smoothly. Sign up as a user or admin, add new media, and create your own movieverse!
