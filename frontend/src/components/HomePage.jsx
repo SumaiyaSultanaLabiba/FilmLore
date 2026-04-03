@@ -14,7 +14,7 @@ const HomePage = () => {
   useEffect(() => {
   const fetchFeaturedMovies = async () => {
     try {
-      const res = await fetch("${import.meta.env.VITE_API_URL}/api/movies");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/movies`);
       const json = await res.json();
 
       if (json.success) {
@@ -43,7 +43,7 @@ const HomePage = () => {
   useEffect(() => { 
     const fetchTopRatedMovies = async () => {
       try {
-        const res = await fetch("${import.meta.env.VITE_API_URL}/api/moviesTopRated");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/moviesTopRated`);
         const json = await res.json();
         if (json.success) {
           setTopRatedMovies(

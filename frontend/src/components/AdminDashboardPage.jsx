@@ -208,7 +208,7 @@ const handleSeriesSubmit = async (e) => {
 
     if (field === "fullName") {
       try {
-        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editFullname', {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/editFullname`, {
           UserName: userInfo.username,
           FullName: userInfo.fullName
         });
@@ -220,7 +220,7 @@ const handleSeriesSubmit = async (e) => {
 
     if (field === "email") {
       try {
-        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editEmail', {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/editEmail`, {
           UserName: userInfo.username,
           Email: userInfo.email
         });
@@ -232,7 +232,7 @@ const handleSeriesSubmit = async (e) => {
 
     if (field === "dob") {
       try {
-        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editDOB', {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/editDOB`, {
           UserName: userInfo.username,
           DateOfBirth: userInfo.dob
         });
@@ -251,7 +251,7 @@ const handleSeriesSubmit = async (e) => {
   useEffect(() => {
     const getStatistics = async () => {
       try {
-        const res = await axios.get('${import.meta.env.VITE_API_URL}/api/user/getStatistics');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/getStatistics`);
         setmovie(Number(res.data.movie));
         setseries(Number(res.data.series));
         setactor(Number(res.data.actor));
@@ -410,7 +410,7 @@ const handleSeriesSubmit = async (e) => {
                     setUserInfo({ ...userInfo, profilePic: newPhotoLink });
                     setIsDialogOpen(false);
                     try {
-                    await axios.post("${import.meta.env.VITE_API_URL}/api/user/editProfilePicture", {
+                    await axios.post(`${import.meta.env.VITE_API_URL}/api/user/editProfilePicture`, {
                     UserName: userInfo.username,
                     ProfilePicture: newPhotoLink,
                     });

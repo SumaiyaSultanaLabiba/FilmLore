@@ -232,7 +232,7 @@ const MovieDetailsPage = () => {
         return;
       }
 
-      const res = await fetch("${import.meta.env.VITE_API_URL}/api/watchlists", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/watchlists`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -262,7 +262,7 @@ const MovieDetailsPage = () => {
     }
 
     try {
-      const res = await fetch("${import.meta.env.VITE_API_URL}/api/watchlist/add", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/watchlist/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

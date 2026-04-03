@@ -62,7 +62,7 @@ const [success, setSuccess] = useState('');
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch('${import.meta.env.VITE_API_URL}/api/movies');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/movies`);
         const json = await res.json();
         
         if (json.success) {

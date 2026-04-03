@@ -45,8 +45,8 @@ const LoginPage = () => {
       // Handle login
       try {
         const endpoint = loginType === 'admin' 
-          ? '${import.meta.env.VITE_API_URL}/api/auth/admin/login'
-          : '${import.meta.env.VITE_API_URL}/api/auth/login';
+          ? `${import.meta.env.VITE_API_URL}/api/auth/admin/login`
+          : `${import.meta.env.VITE_API_URL}/api/auth/login`;
 
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -88,7 +88,7 @@ const LoginPage = () => {
       }
 
       try {
-        const response = await fetch('${import.meta.env.VITE_API_URL}/api/auth/register', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -66,7 +66,7 @@ const CreateBlogPage = () => {
       const token = localStorage.getItem("token");
       const url = isEditMode
         ? `${import.meta.env.VITE_API_URL}/api/blog/${blogId}`
-        : "${import.meta.env.VITE_API_URL}/api/blog";
+        : `${import.meta.env.VITE_API_URL}/api/blog`;
 
       const method = isEditMode ? "PUT" : "POST";
 
