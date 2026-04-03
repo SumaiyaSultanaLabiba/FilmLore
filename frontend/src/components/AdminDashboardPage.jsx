@@ -19,7 +19,7 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/submission/approvedMedia', {UserName: currentUser.username});
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/submission/approvedMedia`, {UserName: currentUser.username});
         setApprovedMedia(res.data.media);
       } catch (err) {
         console.log('Failed to load approved Media.');
@@ -35,7 +35,7 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchMedia = async () => {
       try {
-        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/submission/rejectedMedia', {UserName: currentUser.username});
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/submission/rejectedMedia`, {UserName: currentUser.username});
         setRejectedMedia(res.data.media);
       } catch (err) {
         console.log('Failed to load rejected Media.');
