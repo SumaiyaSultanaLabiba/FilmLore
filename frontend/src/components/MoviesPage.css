@@ -96,73 +96,49 @@
     color: rgba(255, 255, 255, 0.5);
 }
 
-/* User Menu */
-.user-menu {
-    position: relative;
-}
-
-.user-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #a855f7, #ec4899);
-    border: none;
+/* User Section - ALWAYS VISIBLE */
+.user-section {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.3s ease;
+    gap: 1rem;
 }
 
-.user-icon:hover {
-    transform: scale(1.1);
-}
-
-.user-menu:hover .user-dropdown {
-    display: block;
-}
-
-.user-dropdown {
-    display: none;
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 1rem;
-    min-width: 180px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.user-name {
-    margin: 0 0 0.75rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 600;
-}
-
-.logout-btn {
+.user-info {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    width: 100%;
-    padding: 0.5rem;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    color: white;
+    font-weight: 600;
     font-size: 0.95rem;
 }
 
-.logout-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ec4899;
+.username {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.logout-btn-simple {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    background: linear-gradient(135deg, #ec4899, #f472b6);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-btn-simple:hover {
+    background: linear-gradient(135deg, #db2777, #ec4899);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+}
+
+.logout-btn-simple:active {
+    transform: translateY(0);
 }
 
 /* Filters Section */
@@ -435,4 +411,3 @@
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 }
-

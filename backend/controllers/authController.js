@@ -5,10 +5,13 @@ import jwt from "jsonwebtoken";
 // User Registration
 export const registerUser = async (req, res) => {
   try {
+    await sql`BEGIN`;
+
     const { fullName, username, email, password, dateOfBirth, profileImage } = req.body;
 
     // Validate required fields
     if (!username || !email || !password || !fullName) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields"
@@ -23,6 +26,7 @@ export const registerUser = async (req, res) => {
     `;
 
     if (existingUser.length > 0) {  
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: "Username  already exists"
@@ -36,7 +40,7 @@ export const registerUser = async (req, res) => {
     const newUser = await sql`
       INSERT INTO systemuser (fullname, username, email, password, dateofbirth, profilepicture, role)
       VALUES (${fullName}, ${username}, ${email}, ${hashedPassword}, ${dateOfBirth || null}, ${profileImage || null}, 'user')
-      RETURNING  username, email, fullname, role
+      RETURNING  username, email, fullname, role 
     `;
 
      await sql`
@@ -45,6 +49,8 @@ export const registerUser = async (req, res) => {
     `;
        
 
+    await sql`COMMIT`;
+
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -52,6 +58,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (error) {
+    await sql`ROLLBACK`;
     console.error("Registration error:", error);
     return res.status(500).json({
       success: false,
@@ -59,6 +66,8 @@ export const registerUser = async (req, res) => {
     });
   }
 };
+
+
 
 // User Login
 export const loginUser = async (req, res) => {
@@ -141,7 +150,7 @@ export const loginAdmin = async (req, res) => {
 
     // Find admin user
     const admin = await sql`
-      SELECT * FROM users 
+      SELECT * FROM systemuser
       WHERE username = ${username} AND role = 'admin'
     `;
 
@@ -198,7 +207,7 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.user.userId; // From auth middleware
 
     const user = await sql`
-      SELECT userid, username, email, fullname, role, profileimage, dateofbirth
+      SELECT userid, username, email, fullname, role, profilepicture, dateofbirth
       FROM users 
       WHERE userid = ${userId}
     `;

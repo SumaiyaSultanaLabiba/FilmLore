@@ -1,16 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Play,
-  Bookmark,
-  Share2,
-  Star,
-  ThumbsUp,
-  Award
-  
-} from "lucide-react";
+import { ArrowLeft, Play, Bookmark, Share2, Star, Award } from "lucide-react";
 import "./MovieDetailsPage.css";
 
 const MovieDetailsPage = () => {
@@ -25,6 +15,10 @@ const MovieDetailsPage = () => {
   const [editingReviewId, setEditingReviewId] = useState(null);
   const [editRating, setEditRating] = useState(0);
   const [editText, setEditText] = useState("");
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [userWatchlists, setUserWatchlists] = useState([]);
+  const [selectedWatchlist, setSelectedWatchlist] = useState("");
+  const [newWatchlistName, setNewWatchlistName] = useState("");
 
   // Helper function to render stars based on rating
   const renderStars = (rating) => {
@@ -69,7 +63,6 @@ const MovieDetailsPage = () => {
         }
       } catch (err) {
         console.error("Error fetching reviews:", err);
-        // If reviews endpoint doesn't exist yet, use empty array
         setReviews([]);
       }
     };
@@ -87,7 +80,6 @@ const MovieDetailsPage = () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      // calling backend API to save review
       const res = await fetch(
         `http://localhost:5004/api/movies/${movieId}/reviews`,
         {
@@ -108,7 +100,6 @@ const MovieDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        // Add the new review to the reviews list immediately
         const newReview = {
           username: user?.username || "Anonymous",
           rating: userRating,
@@ -117,8 +108,6 @@ const MovieDetailsPage = () => {
         };
 
         setReviews((prevReviews) => [newReview, ...prevReviews]);
-
-        // Reset form
         setUserRating(0);
         setReviewText("");
 
@@ -129,26 +118,21 @@ const MovieDetailsPage = () => {
     } catch (error) {
       console.error("Error submitting review:", error);
       alert("Error submitting review. Please try again.");
-      
-      
     }
   };
 
-  // Start editing a review
   const handleEditReview = (review) => {
     setEditingReviewId(review.reviewid);
     setEditRating(review.rating);
     setEditText(review.text);
   };
 
-  // Cancel editing
   const handleCancelEdit = () => {
     setEditingReviewId(null);
     setEditRating(0);
     setEditText("");
   };
 
-  // Update review
   const handleUpdateReview = async (reviewId) => {
     if (!editRating || !editText.trim()) {
       alert("Please provide both a rating and review text");
@@ -173,7 +157,6 @@ const MovieDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        // Update review in state
         setReviews((prevReviews) =>
           prevReviews.map((review) =>
             review.reviewid === reviewId
@@ -182,7 +165,6 @@ const MovieDetailsPage = () => {
           ),
         );
 
-        // Update movie rating
         if (json.data.newMovieRating) {
           setMovie((prevMovie) => ({
             ...prevMovie,
@@ -190,9 +172,7 @@ const MovieDetailsPage = () => {
           }));
         }
 
-        // Reset edit state
         handleCancelEdit();
-
         alert("Review updated successfully!");
       } else {
         alert(json.message || "Failed to update review");
@@ -203,7 +183,6 @@ const MovieDetailsPage = () => {
     }
   };
 
-  // Delete review
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review?")) {
       return;
@@ -222,12 +201,10 @@ const MovieDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        // Remove review from state
         setReviews((prevReviews) =>
           prevReviews.filter((review) => review.reviewid !== reviewId),
         );
 
-        // Update movie rating
         if (json.data.newMovieRating) {
           setMovie((prevMovie) => ({
             ...prevMovie,
@@ -245,6 +222,74 @@ const MovieDetailsPage = () => {
     }
   };
 
+  const fetchUserWatchlists = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("Please login to add to watchlist");
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch("http://localhost:5004/api/watchlists", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setUserWatchlists(json.data);
+      }
+    } catch (err) {
+      console.error("Error fetching watchlists:", err);
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to add to watchlist");
+      navigate("/login");
+      return;
+    }
+
+    const watchlistTitle =
+      selectedWatchlist === "new" ? newWatchlistName : selectedWatchlist;
+
+    if (!watchlistTitle) {
+      alert("Please select or create a watchlist");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5004/api/watchlist/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mediaid: movieId,
+          title: watchlistTitle,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        alert("Added to watchlist!");
+        setShowWatchlistModal(false);
+        setSelectedWatchlist("");
+        setNewWatchlistName("");
+      } else {
+        alert(json.message || "Failed to add to watchlist");
+      }
+    } catch (error) {
+      console.error("Error adding to watchlist:", error);
+      alert("Error adding to watchlist");
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -255,13 +300,6 @@ const MovieDetailsPage = () => {
 
   return (
     <div className="movie-details-page">
-      {/* Back Button */}
-      <button className="back-btn" onClick={() => navigate("/movies/")}>
-        <ArrowLeft size={20} />
-        <span>Back to Home</span>
-      </button>
-
-      {/* Hero Section */}
       <div className="hero-section">
         <div
           className="hero-background"
@@ -312,9 +350,15 @@ const MovieDetailsPage = () => {
                 <Play size={20} />
                 Watch Trailer
               </button>
-              <button className="btn-secondary">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  fetchUserWatchlists();
+                  setShowWatchlistModal(true);
+                }}
+              >
                 <Bookmark size={20} />
-                In Watchlist
+                Add to Watchlist
               </button>
               <button className="btn-icon">
                 <Share2 size={20} />
@@ -325,7 +369,6 @@ const MovieDetailsPage = () => {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
       <div className="tabs-container">
         <button
           className={`tab ${activeTab === "overview" ? "active" : ""}`}
@@ -353,7 +396,6 @@ const MovieDetailsPage = () => {
         </button>
       </div>
 
-      {/* Content Sections */}
       <div className="content-container">
         {activeTab === "overview" && (
           <div className="overview-section">
@@ -489,96 +531,150 @@ const MovieDetailsPage = () => {
             </div>
 
             <div className="section-card">
-  <h2>👥 User Reviews ({reviews.length})</h2>
-  <div className="reviews-list">
-    {reviews.length > 0 ? (
-      reviews.map((review, idx) => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        const isMyReview = user && review.username === user.username;
-        const isEditing = editingReviewId === review.reviewid;
+              <h2>👥 User Reviews ({reviews.length})</h2>
+              <div className="reviews-list">
+                {reviews.length > 0 ? (
+                  reviews.map((review, idx) => {
+                    const user = JSON.parse(localStorage.getItem("user"));
+                    const isMyReview =
+                      user && review.username === user.username;
+                    const isEditing = editingReviewId === review.reviewid;
 
-        return (
-          <div key={idx} className="review-item">
-            <div className="review-header">
-              <h3>{review.username || "Anonymous User"}</h3>
-              <div className="review-rating">
-                {isEditing ? (
-                  <div className="edit-star-rating">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                      <button
-                        key={star}
-                        className={`star ${editRating >= star ? "active" : ""}`}
-                        onClick={() => setEditRating(star)}
-                      >
-                        ⭐
-                      </button>
-                    ))}
-                  </div>
+                    return (
+                      <div key={idx} className="review-item">
+                        <div className="review-header">
+                          <h3>{review.username || "Anonymous User"}</h3>
+                          <div className="review-rating">
+                            {isEditing ? (
+                              <div className="edit-star-rating">
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                  <button
+                                    key={star}
+                                    className={`star ${editRating >= star ? "active" : ""}`}
+                                    onClick={() => setEditRating(star)}
+                                  >
+                                    ⭐
+                                  </button>
+                                ))}
+                              </div>
+                            ) : (
+                              <>
+                                {renderStars(review.rating)} {review.rating}/10
+                              </>
+                            )}
+                          </div>
+                          <span className="review-date">
+                            {review.date ||
+                              new Date().toISOString().split("T")[0]}
+                          </span>
+                        </div>
+
+                        {isEditing ? (
+                          <div className="edit-review-form">
+                            <textarea
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              rows={5}
+                              className="edit-textarea"
+                            />
+                            <div className="edit-actions">
+                              <button
+                                className="save-edit-btn"
+                                onClick={() =>
+                                  handleUpdateReview(review.reviewid)
+                                }
+                              >
+                                Save
+                              </button>
+                              <button
+                                className="cancel-edit-btn"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="review-text">{review.text}</p>
+                        )}
+
+                        {isMyReview && !isEditing && (
+                          <div className="review-actions">
+                            <button
+                              className="edit-review-btn"
+                              onClick={() => handleEditReview(review)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="delete-review-btn"
+                              onClick={() =>
+                                handleDeleteReview(review.reviewid)
+                              }
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
-                  <>
-                    {renderStars(review.rating)} {review.rating}/10
-                  </>
+                  <p className="no-data">
+                    No reviews yet. Be the first to review!
+                  </p>
                 )}
               </div>
-              <span className="review-date">
-                {review.date || new Date().toISOString().split("T")[0]}
-              </span>
             </div>
-
-            {isEditing ? (
-              <div className="edit-review-form">
-                <textarea
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  rows={5}
-                  className="edit-textarea"
-                />
-                <div className="edit-actions">
-                  <button
-                    className="save-edit-btn"
-                    onClick={() => handleUpdateReview(review.reviewid)}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="cancel-edit-btn"
-                    onClick={handleCancelEdit}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="review-text">{review.text}</p>
-            )}
-
-            {isMyReview && !isEditing && (
-              <div className="review-actions">
-                <button
-                  className="edit-review-btn"
-                  onClick={() => handleEditReview(review)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="delete-review-btn"
-                  onClick={() => handleDeleteReview(review.reviewid)}
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })
-    ) : (
-      <p className="no-data">No reviews yet. Be the first to review!</p>
-    )}
-  </div>
-</div>
           </div>
         )}
       </div>
+
+      {/* Watchlist Modal */}
+      {showWatchlistModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowWatchlistModal(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Add to Watchlist</h2>
+
+            <select
+              value={selectedWatchlist}
+              onChange={(e) => setSelectedWatchlist(e.target.value)}
+            >
+              <option value="">Select a watchlist...</option>
+              {userWatchlists.map((wl) => (
+                <option key={wl.watchlistid} value={wl.watchlist_name}>
+                  {wl.watchlist_name} ({wl.item_count} items)
+                </option>
+              ))}
+              <option value="new">+ Create New Watchlist</option>
+            </select>
+
+            {selectedWatchlist === "new" && (
+              <input
+                type="text"
+                placeholder="New watchlist name"
+                value={newWatchlistName}
+                onChange={(e) => setNewWatchlistName(e.target.value)}
+              />
+            )}
+
+            <div className="modal-actions">
+              <button className="btn-primary" onClick={handleAddToWatchlist}>
+                Add
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowWatchlistModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

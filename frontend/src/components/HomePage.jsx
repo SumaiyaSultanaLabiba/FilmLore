@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Home, Film, TrendingUp, Star, Play } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { Search, Home, Film, TrendingUp, Star, Play, List } from 'lucide-react';
 import './HomePage.css';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
   const [featuredMovies, setFeaturedMovies] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
 
   // Sample featured movies data
   useEffect(() => {
@@ -36,9 +39,6 @@ const HomePage = () => {
   fetchFeaturedMovies();
 }, []);
 
-
-  // Top rated movies from backend
-   const [topRatedMovies, setTopRatedMovies] = useState([]);
 
   useEffect(() => { 
     const fetchTopRatedMovies = async () => {
@@ -80,25 +80,22 @@ const HomePage = () => {
  
 
 if (!currentFeatured) {
-  return null; // or: return <div>Loading...</div>;
+  return null;
 }
 
   return (
-    
     <div className="home-page">
       {/* Navigation */}
       <nav className="navbar">
         <div className="nav-left">
-          <h1 className="logo">FILMLORE</h1>
+          <h1
+            className="logo"
+            onClick={() => navigate("/home")}
+            style={{ cursor: "pointer" }}
+          >
+            FILMLORE
+          </h1>
           <div className="nav-links">
-            <a href="/home" className="nav-link active">
-              <Home size={20} />
-              <span>Movies</span>
-            </a>
-            <a href="/seriess" className="nav-link">
-              <Film size={20} />
-              <span>Series</span>
-            </a>
           </div>
         </div>
 
@@ -134,7 +131,10 @@ if (!currentFeatured) {
               <Star size={20} fill="currentColor" />
               <span>{currentFeatured.rating}/10</span>
             </div>
-            <button className="watch-trailer-btn" onClick={() => window.open(currentFeatured.trailer, '_blank')}>
+            <button
+              className="watch-trailer-btn"
+              onClick={() => window.open(currentFeatured.trailer, "_blank")}
+            >
               <Play size={18} />
               Watch Trailer
             </button>
@@ -142,39 +142,50 @@ if (!currentFeatured) {
         </div>
       </section>
 
-      
-    
-    {/* Top Rated Movies */}
-<section className="movies-section">
-  <h2 className="section-title">
-    <Star size={24} />
-    Top Rated Movies
-  </h2>
-  <div className="top-rated-grid">
-    {topRatedMovies.map((movie) => (
-      <div key={movie.id} className="top-rated-card">
-        <div className="top-rated-poster">
-          {movie.image ? (
-            <img src={movie.image} alt={movie.title} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-          ) : (
-            <Film size={40} />
-          )}
+      {/* Top Rated Movies */}
+      <section className="movies-section">
+        <h2 className="section-title">
+          <Star size={24} />
+          Top Rated Movies
+        </h2>
+        <div className="top-rated-grid">
+          {topRatedMovies.map((movie) => (
+            <div
+              key={movie.id}
+              className="top-rated-card"
+              onClick={() => navigate(`/movie/${movie.id}`)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="top-rated-poster">
+                {movie.image ? (
+                  <img
+                    src={movie.image}
+                    alt={movie.title}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <Film size={40} />
+                )}
+              </div>
+              <div className="top-rated-info">
+                <h3>{movie.title}</h3>
+                <p className="movie-year">{movie.year}</p>
+                <p className="movie-genre">{movie.genre}</p>
+                <div className="movie-rating">
+                  <Star size={14} fill="currentColor" />
+                  <span>{movie.rating}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="top-rated-info">
-          <h3>{movie.title}</h3>
-          <p className="movie-year">{movie.year}</p>
-          <p className="movie-genre">{movie.genre}</p>
-          <div className="movie-rating">
-            <Star size={14} fill="currentColor" />
-            <span>{movie.rating}</span>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</section>
+      </section>
     </div>
   );
-}
+};
 
 export default HomePage;

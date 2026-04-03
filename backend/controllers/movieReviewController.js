@@ -34,14 +34,19 @@ export const getMovieReview = async (req, res) => {
   }
 };
 
+
+
 // Create a new review
 export const createReview = async (req, res) => {
   try {
+    await sql`BEGIN`;
+
     const movieId = Number(req.params.movieId);
     const { rating, text, username } = req.body;
 
     // Validate input
     if (!rating || !text || !username) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: 'Rating, text, and userId are required'
@@ -49,6 +54,7 @@ export const createReview = async (req, res) => {
     }
 
     if (rating < 1 || rating > 10) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: 'Rating must be between 1 and 10'
@@ -63,6 +69,7 @@ export const createReview = async (req, res) => {
     `;
 
     if (existingReview.length > 0) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: 'You have already reviewed this movie'
@@ -77,6 +84,7 @@ export const createReview = async (req, res) => {
 `;
 
 if (movieRow.length === 0) {
+  await sql`ROLLBACK`;
   return res.status(404).json({ success: false, message: "Movie not found" });
 }
 
@@ -115,6 +123,8 @@ const actualMovieId = movieRow[0].movieid;
   
     };
 
+    await sql`COMMIT`;
+
     return res.status(201).json({
       success: true,
       message: 'Review created successfully',
@@ -130,6 +140,7 @@ const actualMovieId = movieRow[0].movieid;
   
   }
    catch (error) {
+    await sql`ROLLBACK`;
     console.error('Error creating review:', error);
     return res.status(500).json({
       success: false,
@@ -143,12 +154,15 @@ const actualMovieId = movieRow[0].movieid;
 // Update a review
 export const updateReview = async (req, res) => {
   try {
+    await sql`BEGIN`;
+
     const reviewId = Number(req.params.reviewId);
     const { rating, text } = req.body;
     const username = req.user.username;
 
     // Validate input
     if (!rating || !text) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: 'Rating and text are required'
@@ -156,6 +170,7 @@ export const updateReview = async (req, res) => {
     }
 
     if (rating < 1 || rating > 10) {
+      await sql`ROLLBACK`;
       return res.status(400).json({
         success: false,
         message: 'Rating must be between 1 and 10'
@@ -169,6 +184,7 @@ export const updateReview = async (req, res) => {
     `;
 
     if (existingReview.length === 0) {
+      await sql`ROLLBACK`;
       return res.status(404).json({
         success: false,
         message: 'Review not found or you are not authorized to update it'
@@ -192,6 +208,7 @@ export const updateReview = async (req, res) => {
     `;
 
     if (mediaIdRow.length === 0) {
+      await sql`ROLLBACK`;
       return res.status(404).json({
         success: false,
         message: 'Movie not found'
@@ -216,6 +233,8 @@ export const updateReview = async (req, res) => {
       WHERE mediaid = ${mediaId}
     `;
 
+    await sql`COMMIT`;
+
     return res.status(200).json({
       success: true,
       message: 'Review updated successfully',
@@ -225,6 +244,7 @@ export const updateReview = async (req, res) => {
       }
     });
   } catch (error) {
+    await sql`ROLLBACK`;
     console.error('Error updating review:', error);
     return res.status(500).json({
       success: false,
@@ -234,9 +254,12 @@ export const updateReview = async (req, res) => {
 };
 
 
+
 // Delete a review
 export const deleteReview = async (req, res) => {
   try {
+    await sql`BEGIN`;
+
     const reviewId = Number(req.params.reviewId);
     const username = req.user.username;
 
@@ -247,6 +270,7 @@ export const deleteReview = async (req, res) => {
     `;
 
     if (existingReview.length === 0) {
+      await sql`ROLLBACK`;
       return res.status(404).json({
         success: false,
         message: 'Review not found or you are not authorized to delete it'
@@ -262,6 +286,7 @@ export const deleteReview = async (req, res) => {
     `;
 
     if (mediaIdRow.length === 0) {
+      await sql`ROLLBACK`;
       return res.status(404).json({
         success: false,
         message: 'Movie not found'
@@ -294,6 +319,8 @@ export const deleteReview = async (req, res) => {
       WHERE mediaid = ${mediaId}
     `;
 
+    await sql`COMMIT`;
+
     return res.status(200).json({
       success: true,
       message: 'Review deleted successfully',
@@ -302,6 +329,7 @@ export const deleteReview = async (req, res) => {
       }
     });
   } catch (error) {
+    await sql`ROLLBACK`;
     console.error('Error deleting review:', error);
     return res.status(500).json({
       success: false,

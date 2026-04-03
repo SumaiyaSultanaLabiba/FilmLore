@@ -1,5 +1,27 @@
 import { sql } from "../config/db.js";
 
+
+
+export const getGenre = async (req, res) => {
+  try {
+    const { mediaid } = req.params; 
+    const result = await sql`
+      SELECT g.GenreName as gn
+      FROM Genre g
+      JOIN MediaGenre mg ON g.GenreID = mg.GenreID
+      WHERE mg.MediaID = ${mediaid};
+    `;
+    const genres = result.map(row => row.gn);
+    console.log("Genres:", genres);
+    res.status(200).json({ genres });
+  } catch (error) {
+    console.error("Error fetching genre:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+
 export const getAllMovies=async(req,res)=>
 {
     try{
@@ -23,6 +45,7 @@ export const getAllMovies=async(req,res)=>
 
     }
 }
+
 
 export const getAllSeries=async(req,res)=>
 {
@@ -129,14 +152,29 @@ export const getSeriesByID=async(req,res)=>
 {
     try
     {
-        const seriesid=Number(req.params.seriesId);
+        const mediaid=Number(req.params.seriesId);
+        // First, get the seriesid using the mediaid
+        const seriesIdRow = await sql`
+        SELECT seriesid FROM series WHERE mediaid = ${mediaid}
+        `;
+        if (seriesIdRow.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Series not found'
+            });
+        }
+      
+
         const seriesQuery=
           await sql
           `
-           SELECT M.*, S.isongoing
-           FROM media M
-           JOIN series S ON M.mediaid=S.mediaid
-           WHERE S.seriesid=${Number(req.params.seriesId)}  
+          SELECT M.* ,S.isongoing
+          FROM media M
+          JOIN series S ON m.mediaid=S.mediaid
+          WHERE M.mediaid=${mediaid}
+
+
+        
 
           `;
 
@@ -145,9 +183,8 @@ export const getSeriesByID=async(req,res)=>
             SELECT A.*
             FROM actor A
             JOIN mediaactor MA ON A.actorid=MA.actorid
-            WHERE MA.mediaid IN (
-                SELECT mediaid FROM series WHERE seriesid=${seriesid}
-            )
+            WHERE MA.mediaid =${mediaid}
+          
             `;
 
         const seriesStudioQuery=
@@ -155,9 +192,8 @@ export const getSeriesByID=async(req,res)=>
         SELECT S.*
         FROM studio S
         JOIN mediastudio MS ON S.studioid=MS.studioid
-        WHERE MS.mediaid IN (
-        SELECT mediaid FROM series WHERE seriesid=${seriesid}
-            )
+        WHERE MS.mediaid = ${mediaid}
+        
         `;
 
         const seriesGenreQuery=
@@ -165,9 +201,7 @@ export const getSeriesByID=async(req,res)=>
         SELECT G.*
         FROM genre G
         JOIN mediagenre MG ON G.genreid=MG.genreid
-        WHERE MG.mediaid IN (
-        SELECT mediaid FROM series WHERE seriesid=${seriesid}
-            )
+        WHERE MG.mediaid = ${mediaid}
         `;
 
         const seriesDirectorQuery=
@@ -175,9 +209,8 @@ export const getSeriesByID=async(req,res)=>
         SELECT D.*
         FROM director D
         JOIN mediadirector MD ON D.directorid=MD.directorid
-        WHERE MD.mediaid IN (
-        SELECT mediaid FROM series WHERE seriesid=${seriesid}
-            )
+        WHERE MD.mediaid = ${mediaid}
+            
         `;
 
         const seriesAwardQuery=
@@ -185,25 +218,28 @@ export const getSeriesByID=async(req,res)=>
         SELECT A.*
         FROM award A
         JOIN mediaaward MA ON A.awardid=MA.awardid
-        WHERE MA.mediaid IN (
-        SELECT mediaid FROM series WHERE seriesid=${seriesid}
-            )
+        WHERE MA.mediaid = ${mediaid}
         `;
 
         
         const seasonQuery=
         await sql`
-        SELECT *, COUNT(*) OVER() AS total_seasons
+        SELECT *,
+         COUNT(*) OVER() AS total_seasons
         FROM season
-        WHERE seriesid=${seriesid}
+        WHERE seriesid=${seriesIdRow[0].seriesid}
         `;
 
         const episodeQuery=
         await sql`
-        SELECT E.*
+        SELECT E.*, S.seasonno AS seasonnumber,
+        S.seasonid as season_seasonid,
+
+        COUNT(*) OVER() AS total_episodes
         FROM episode E
         JOIN season S ON E.seasonid=S.seasonid
-        WHERE S.seriesid=${seriesid}
+        WHERE S.seriesid=${seriesIdRow[0].seriesid}
+        ORDER BY S.seasonno, E.episodeno
         `;
 
         const seriesData=seriesQuery[0];
@@ -217,6 +253,7 @@ export const getSeriesByID=async(req,res)=>
             seriesData.seasons=seasonQuery;
             seriesData.episodes=episodeQuery;
         }
+        console.log(seriesData)
         return res.status(200).json({success:true,data:seriesData});
 
 

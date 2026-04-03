@@ -1,3 +1,5 @@
+/* Series Details Page - Cinematic Bold Aesthetic */
+
 .series-details-page {
     min-height: 100vh;
     background: #0a0e1a;
@@ -741,13 +743,19 @@
     }
 }
 
-/* Episodes Section - Unique to Series */
+/* Episodes Section Styles */
 .episodes-section {
     width: 100%;
 }
 
+.section-title {
+    font-size: 2rem;
+    color: #e879f9;
+    margin-bottom: 2rem;
+}
+
 .season-container {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     background: rgba(30, 41, 59, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
@@ -774,14 +782,33 @@
 .season-header h3 {
     font-size: 1.5rem;
     margin: 0;
-    color: #e879f9;
+    color: white;
+}
+
+.season-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+    margin-right: 1rem;
+}
+
+.season-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #fbbf24;
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
 .episode-count {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.95rem;
-    margin-left: auto;
-    margin-right: 1rem;
+    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    border-radius: 20px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
 .episodes-list {
@@ -790,24 +817,27 @@
 }
 
 .episode-card {
-    display: flex;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     background: rgba(30, 41, 59, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
 .episode-card:hover {
     background: rgba(30, 41, 59, 0.7);
     border-color: #a855f7;
-    transform: translateX(4px);
 }
 
 .episode-card:last-child {
     margin-bottom: 0;
+}
+
+.episode-main {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
 }
 
 .episode-number {
@@ -824,11 +854,11 @@
     color: white;
 }
 
-.episode-details {
+.episode-info {
     flex: 1;
 }
 
-.episode-details h4 {
+.episode-info h4 {
     font-size: 1.2rem;
     margin: 0 0 0.75rem 0;
     color: white;
@@ -853,12 +883,93 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.75);
-    margin: 0;
+    margin: 0 0 1rem 0;
 }
 
-/* Responsive adjustments for episodes */
+.episode-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.review-count-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid #a855f7;
+    border-radius: 8px;
+    color: #e879f9;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.review-count-btn:hover {
+    background: rgba(168, 85, 247, 0.3);
+}
+
+/* Episode Reviews */
+.episode-reviews {
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.episode-reviews h5 {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 1rem 0;
+}
+
+.mini-review {
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.mini-review:last-child {
+    margin-bottom: 0;
+}
+
+.mini-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.mini-review-header strong {
+    color: white;
+    font-size: 0.95rem;
+}
+
+.mini-rating {
+    color: #fbbf24;
+    font-size: 0.85rem;
+}
+
+.mini-review p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 0.5rem 0;
+}
+
+.mini-review-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive for Episodes */
 @media (max-width: 768px) {
-    .episode-card {
+    .episode-main {
         flex-direction: column;
         gap: 1rem;
     }
@@ -881,9 +992,14 @@
     .season-header h3 {
         font-size: 1.2rem;
     }
+
+    .episode-count {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.75rem;
+    }
 }
 
-/* Update responsive section for series-specific elements */
+/* Update responsive section */
 @media (max-width: 1024px) {
     .series-poster-large {
         width: 250px;
@@ -906,4 +1022,232 @@
     .series-title {
         font-size: 2rem;
     }
+}
+
+/* Episode Review Form */
+.episode-review-form {
+    padding: 1.5rem;
+    background: rgba(168, 85, 247, 0.1);
+    border-top: 1px solid rgba(168, 85, 247, 0.3);
+    margin-top: 1rem;
+}
+
+.episode-review-form h5 {
+    font-size: 1.1rem;
+    color: #e879f9;
+    margin: 0 0 1rem 0;
+}
+
+.episode-review-form .rating-input {
+    margin-bottom: 1rem;
+}
+
+.episode-review-form .rating-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.episode-review-form .star-rating {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.episode-review-form .star {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: all 0.2s ease;
+}
+
+.episode-review-form .star.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.episode-review-form .star:hover {
+    opacity: 0.7;
+}
+
+.episode-review-form textarea {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+    font-family: inherit;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+.episode-review-form textarea:focus {
+    outline: none;
+    border-color: #a855f7;
+}
+
+.review-form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.submit-episode-review-btn,
+.cancel-review-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.submit-episode-review-btn {
+    background: linear-gradient(135deg, #a855f7, #ec4899);
+    color: white;
+}
+
+.submit-episode-review-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.5);
+}
+
+.cancel-review-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cancel-review-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.review-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid #a855f7;
+    border-radius: 8px;
+    color: #e879f9;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.review-btn:hover {
+    background: rgba(168, 85, 247, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Review Actions Mini Buttons */
+.review-actions-mini {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.edit-btn-mini,
+.delete-btn-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-btn-mini {
+    background: rgba(168, 85, 247, 0.2);
+    color: #e879f9;
+    border: 1px solid #a855f7;
+}
+
+.edit-btn-mini:hover {
+    background: rgba(168, 85, 247, 0.3);
+}
+
+.delete-btn-mini {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid #ef4444;
+}
+
+.delete-btn-mini:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+/* Edit Review Section */
+.edit-review-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.edit-review-section .rating-input {
+    margin-bottom: 1rem;
+}
+
+.edit-review-section .rating-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.edit-review-section .star-rating {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.edit-review-section .star {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    opacity: 0.3;
+    transition: all 0.2s ease;
+}
+
+.edit-review-section .star.active {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.edit-review-section .star:hover {
+    opacity: 0.7;
+}
+
+.edit-review-section textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+    box-sizing: border-box;
+}
+
+.edit-review-section textarea:focus {
+    outline: none;
+    border-color: #a855f7;
 }

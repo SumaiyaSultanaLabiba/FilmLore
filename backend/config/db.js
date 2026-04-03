@@ -215,6 +215,8 @@ export const sql=neon(`postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABA
      ReviewDate DATE DEFAULT CURRENT_DATE
       );`
 
+
+
       //Blog Table
      await sql`
      CREATE TABLE IF NOT EXISTS Blog(
@@ -250,12 +252,21 @@ export const sql=neon(`postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABA
      CREATE TABLE IF NOT EXISTS Submission(
      SubmissionID SERIAL PRIMARY KEY,
      UserName VARCHAR(100) REFERENCES APPUser(UserName) ON DELETE CASCADE,
-     MediaTitle VARCHAR(255) NOT NULL,
-     MediaType VARCHAR(50),
-     Description TEXT,
+     Title VARCHAR(255) NOT NULL,
+     OverView TEXT,
+     Poster TEXT,
+     Language VARCHAR(50),
+     Rating numeric(3,2),
+     Trailer TEXT,
+     ReleaseYear INT,
+     Country VARCHAR(100),
+     Type VARCHAR(50) NOT NULL,
+     Duration INT,
+     isOngoing BOOLEAN,
      SubmissionDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
      Status VARCHAR(50) DEFAULT 'Pending'
       );`
+
 
       //Approval Table
      await sql`
@@ -264,13 +275,100 @@ export const sql=neon(`postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABA
      SubmissionID INT REFERENCES Submission(SubmissionID) ON DELETE CASCADE,
      AdminUserName VARCHAR(100) REFERENCES Admin(UserName) ON DELETE CASCADE,
      ApprovalDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     Decision VARCHAR(50),
-     Comments TEXT
+     Decision VARCHAR(50)
       );`
 
-      console.log("Database initialized successfully");
 
-   
+      // TRIGGER FUNCTION
+    await sql`
+      CREATE OR REPLACE FUNCTION fn_set_update_timestamp()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.updatedate = CURRENT_TIMESTAMP;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql
+    `;
+
+    // DROP TRIGGER — separate call, no semicolon at end
+    await sql`
+      DROP TRIGGER IF EXISTS trg_blog_update_timestamp ON blog
+    `;
+
+    // CREATE TRIGGER — separate call, no semicolon at end
+    await sql`
+      CREATE TRIGGER trg_blog_update_timestamp
+      BEFORE UPDATE ON blog
+      FOR EACH ROW
+      EXECUTE FUNCTION fn_set_update_timestamp()
+    `;
+
+    // FUNCTION
+    await sql`
+      CREATE OR REPLACE FUNCTION get_blog_with_details(p_blogid INT)
+      RETURNS TABLE (
+        blogid INT,
+        username VARCHAR,
+        title VARCHAR,
+        content TEXT,
+        createdate TIMESTAMP,
+        updatedate TIMESTAMP,
+        reaction_count BIGINT,
+        comments JSON
+      ) AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT
+          b.blogid,
+          b.username,
+          b.title,
+          b.content,
+          b.createdate,
+          b.updatedate,
+          COUNT(DISTINCT r.reactionid) AS reaction_count,
+          COALESCE(
+            JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'commentid', c.commentid,
+                'username', c.username,
+                'commenttext', c.commenttext,
+                'commentdate', c.commentdate
+              ) ORDER BY c.commentdate DESC
+            ) FILTER (WHERE c.commentid IS NOT NULL),
+            '[]'
+          ) AS comments
+        FROM blog b
+        LEFT JOIN blogcomment c ON b.blogid = c.blogid
+        LEFT JOIN blogreaction r ON b.blogid = r.blogid
+        WHERE b.blogid = p_blogid
+        GROUP BY b.blogid, b.username, b.title, b.content, b.createdate, b.updatedate;
+      END;
+      $$ LANGUAGE plpgsql
+    `;
+
+    // PROCEDURE
+    await sql`
+      CREATE OR REPLACE PROCEDURE create_blog(
+        p_username VARCHAR,
+        p_title VARCHAR,
+        p_content TEXT
+      )
+      LANGUAGE plpgsql AS $$
+      BEGIN
+        IF p_title IS NULL OR TRIM(p_title) = '' THEN
+          RAISE EXCEPTION 'Title is required';
+        END IF;
+        IF p_content IS NULL OR TRIM(p_content) = '' THEN
+          RAISE EXCEPTION 'Content is required';
+        END IF;
+        INSERT INTO blog (username, title, content)
+        VALUES (p_username, p_title, p_content);
+      END;
+      $$
+    `;
+
+
+      console.log("Database initialized successfully");
 
   }
   catch(error)

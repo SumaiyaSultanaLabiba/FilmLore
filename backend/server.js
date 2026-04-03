@@ -8,12 +8,18 @@ import userRoutes from "./routes/userRoutes.js"
 import mediaRoutes from "./routes/mediaRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import movieReviewRoutes from "./routes/movieReviewRoutes.js"
-//import adminRoutes from "./routes/adminRoutes.js"
+import EpisodereviewRoutes from "./routes/EpisodereviewRoutes.js"
+import watchlistRoutes from "./routes/watchlistRoutes.js"
+import blogRoutes from "./routes/blogRoutes.js"
+import submissionRoutes from "./routes/submissionRoutes.js"
+
+
+
 import {sql,initDB} from "./config/db.js"
 dotenv.config()
 import { aj } from "./lib/arcjet.js";
 
-const PORT=process.env.PORT ||5000
+const PORT=process.env.PORT ||5004
 console.log(PORT)
 const app=express();
 app.use(helmet())
@@ -23,16 +29,15 @@ app.use(cors())
 
 
 
-
+app.use("/api",blogRoutes)
+app.use("/api",watchlistRoutes)
 app.use("/api",movieReviewRoutes)
+app.use("/api",EpisodereviewRoutes)
 app.use("/api",actorRoutes)
 app.use("/api/user",userRoutes)
 app.use("/api",mediaRoutes)
 app.use("/api/auth",authRoutes)
-
-
-
-
+app.use("/api/submission", submissionRoutes)
 
 
 

@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -12,6 +10,9 @@ import {
   ChevronUp,
   Clock,
   Calendar,
+  MessageSquare,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import "./SeriesDetailsPage.css";
 
@@ -21,22 +22,27 @@ const SeriesDetailsPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [series, setSeries] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userRating, setUserRating] = useState(0);
-  const [reviewText, setReviewText] = useState("");
-  const [reviews, setReviews] = useState([]);
-  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [expandedSeasons, setExpandedSeasons] = useState({});
+  const [episodeReviews, setEpisodeReviews] = useState({});
+  const [reviewingEpisode, setReviewingEpisode] = useState(null);
+  const [episodeRating, setEpisodeRating] = useState(0);
+  const [episodeReviewText, setEpisodeReviewText] = useState("");
+  const [editingReview, setEditingReview] = useState(null);
   const [editRating, setEditRating] = useState(0);
   const [editText, setEditText] = useState("");
-  const [expandedSeasons, setExpandedSeasons] = useState({});
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [userWatchlists, setUserWatchlists] = useState([]);
+  const [selectedWatchlist, setSelectedWatchlist] = useState("");
+  const [newWatchlistName, setNewWatchlistName] = useState("");
 
-  // Helper function to render stars based on rating
+  // Helper function to render stars
   const renderStars = (rating) => {
     return Array.from({ length: 10 }, (_, i) => (
       <span
         key={i}
         style={{
           opacity: i < Math.floor(rating) ? 1 : 0.3,
-          fontSize: "1rem",
+          fontSize: "0.9rem",
         }}
       >
         ⭐
@@ -45,51 +51,77 @@ const SeriesDetailsPage = () => {
   };
 
   useEffect(() => {
-    const fetchSeriesDetails = async () => {
-      try {
-        const res = await fetch(`http://localhost:5004/api/series/${seriesId}`);
-        const json = await res.json();
-
-        if (json.success) {
-          setSeries(json.data);
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching series:", err);
-        setLoading(false);
-      }
-    };
-
-    const fetchReviews = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5004/api/series/${seriesId}/reviews`,
-        );
-        const json = await res.json();
-
-        if (json.success) {
-          setReviews(json.data || []);
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        setReviews([]);
-      }
-    };
-
     fetchSeriesDetails();
-    fetchReviews();
   }, [seriesId]);
 
-  const toggleSeason = (seasonNumber) => {
-    setExpandedSeasons((prev) => ({
-      ...prev,
-      [seasonNumber]: !prev[seasonNumber],
-    }));
+  const fetchSeriesDetails = async () => {
+    try {
+      const res = await fetch(`http://localhost:5004/api/series/${seriesId}`);
+      const json = await res.json();
+
+      if (json.success) {
+        setSeries(json.data);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching series:", err);
+      setLoading(false);
+    }
   };
 
-  // Review functions (same as MovieDetailsPage)
-  const handleSubmitReview = async () => {
-    if (!userRating || !reviewText.trim()) {
+  const toggleSeason = (seasonNumber) => {
+    setExpandedSeasons((prev) => {
+      const newExpanded = {
+        ...prev,
+        [seasonNumber]: !prev[seasonNumber],
+      };
+
+      // If expanding, fetch reviews for all episodes in this season
+      if (newExpanded[seasonNumber] && series.episodes) {
+        const seasonEpisodes = series.episodes.filter(
+          (ep) => (ep.seasonnumber || ep.seasonno) == seasonNumber,
+        );
+        seasonEpisodes.forEach((episode) => {
+          if (!episodeReviews[episode.episodeid]) {
+            fetchEpisodeReviews(episode.episodeid);
+          }
+        });
+      }
+
+      return newExpanded;
+    });
+  };
+
+  const fetchEpisodeReviews = async (episodeId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5004/api/episode/${episodeId}/reviews`,
+      );
+      const json = await res.json();
+
+      if (json.success) {
+        setEpisodeReviews((prev) => ({
+          ...prev,
+          [episodeId]: json.data || [],
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching episode reviews:", err);
+    }
+  };
+
+  const handleReviewEpisode = (episodeId) => {
+    setReviewingEpisode(episodeId);
+    setEpisodeRating(0);
+    setEpisodeReviewText("");
+
+    if (!episodeReviews[episodeId]) {
+      fetchEpisodeReviews(episodeId);
+    }
+  };
+
+  const handleSubmitEpisodeReview = async () => {
+    if (!episodeRating || !episodeReviewText.trim()) {
       alert("Please provide both a rating and review text");
       return;
     }
@@ -105,7 +137,7 @@ const SeriesDetailsPage = () => {
       }
 
       const res = await fetch(
-        `http://localhost:5004/api/series/${seriesId}/reviews`,
+        `http://localhost:5004/api/episode/${reviewingEpisode}/reviews`,
         {
           method: "POST",
           headers: {
@@ -113,10 +145,8 @@ const SeriesDetailsPage = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            rating: userRating,
-            text: reviewText,
-            seriesId: seriesId,
-            username: user.username,
+            rating: episodeRating,
+            text: episodeReviewText,
           }),
         },
       );
@@ -124,48 +154,34 @@ const SeriesDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        const newReview = {
-          username: user.username,
-          rating: userRating,
-          text: reviewText,
-          date: new Date().toISOString().split("T")[0],
-        };
+        alert("Episode review submitted successfully!");
 
-        setReviews((prevReviews) => [newReview, ...prevReviews]);
+        // Refresh episode reviews
+        await fetchEpisodeReviews(reviewingEpisode);
 
-        if (json.data.newSeriesRating) {
-          setSeries((prevSeries) => ({
-            ...prevSeries,
-            rating: json.data.newSeriesRating,
-          }));
-        }
+        // Refresh series data to get updated ratings
+        await fetchSeriesDetails();
 
-        setUserRating(0);
-        setReviewText("");
-
-        alert("Review submitted successfully!");
+        // Reset form
+        setEpisodeRating(0);
+        setEpisodeReviewText("");
+        setReviewingEpisode(null);
       } else {
         alert(json.message || "Failed to submit review");
       }
     } catch (error) {
-      console.error("Error submitting review:", error);
+      console.error("Error submitting episode review:", error);
       alert("Error submitting review. Please try again.");
     }
   };
 
-  const handleEditReview = (review) => {
-    setEditingReviewId(review.reviewid);
+  const handleEditReview = (review, episodeId) => {
+    setEditingReview({ ...review, episodeId });
     setEditRating(review.rating);
     setEditText(review.text);
   };
 
-  const handleCancelEdit = () => {
-    setEditingReviewId(null);
-    setEditRating(0);
-    setEditText("");
-  };
-
-  const handleUpdateReview = async (reviewId) => {
+  const handleUpdateReview = async () => {
     if (!editRating || !editText.trim()) {
       alert("Please provide both a rating and review text");
       return;
@@ -175,7 +191,7 @@ const SeriesDetailsPage = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5004/api/reviews/${reviewId}`,
+        `http://localhost:5004/api/episode/review/${editingReview.reviewid}`,
         {
           method: "PUT",
           headers: {
@@ -192,23 +208,18 @@ const SeriesDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        setReviews((prevReviews) =>
-          prevReviews.map((review) =>
-            review.reviewid === reviewId
-              ? { ...review, rating: editRating, text: editText }
-              : review
-          )
-        );
-
-        if (json.data.newSeriesRating) {
-          setSeries((prevSeries) => ({
-            ...prevSeries,
-            rating: json.data.newSeriesRating,
-          }));
-        }
-
-        handleCancelEdit();
         alert("Review updated successfully!");
+
+        // Refresh episode reviews
+        await fetchEpisodeReviews(editingReview.episodeId);
+
+        // Refresh series data to get updated ratings
+        await fetchSeriesDetails();
+
+        // Reset edit state
+        setEditingReview(null);
+        setEditRating(0);
+        setEditText("");
       } else {
         alert(json.message || "Failed to update review");
       }
@@ -218,7 +229,7 @@ const SeriesDetailsPage = () => {
     }
   };
 
-  const handleDeleteReview = async (reviewId) => {
+  const handleDeleteReview = async (reviewId, episodeId) => {
     if (!window.confirm("Are you sure you want to delete this review?")) {
       return;
     }
@@ -227,7 +238,7 @@ const SeriesDetailsPage = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5004/api/reviews/${reviewId}`,
+        `http://localhost:5004/api/episode/review/${reviewId}`,
         {
           method: "DELETE",
           headers: {
@@ -239,24 +250,98 @@ const SeriesDetailsPage = () => {
       const json = await res.json();
 
       if (json.success) {
-        setReviews((prevReviews) =>
-          prevReviews.filter((review) => review.reviewid !== reviewId)
-        );
-
-        if (json.data.newSeriesRating) {
-          setSeries((prevSeries) => ({
-            ...prevSeries,
-            rating: json.data.newSeriesRating,
-          }));
-        }
-
         alert("Review deleted successfully!");
+
+        // Refresh episode reviews
+        await fetchEpisodeReviews(episodeId);
+
+        // Refresh series data to get updated ratings
+        await fetchSeriesDetails();
       } else {
         alert(json.message || "Failed to delete review");
       }
     } catch (error) {
       console.error("Error deleting review:", error);
       alert("Error deleting review. Please try again.");
+    }
+  };
+
+  const handleCancelReview = () => {
+    setReviewingEpisode(null);
+    setEpisodeRating(0);
+    setEpisodeReviewText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReview(null);
+    setEditRating(0);
+    setEditText("");
+  };
+
+  const fetchUserWatchlists = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to add to watchlist");
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch("http://localhost:5004/api/watchlists", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setUserWatchlists(json.data);
+      }
+    } catch (err) {
+      console.error("Error fetching watchlists:", err);
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to add to watchlist");
+      navigate("/login");
+      return;
+    }
+
+    const watchlistTitle =
+      selectedWatchlist === "new" ? newWatchlistName : selectedWatchlist;
+
+    if (!watchlistTitle) {
+      alert("Please select or create a watchlist");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5004/api/watchlist/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mediaid: seriesId, // ✅ FIXED: Use seriesId, not movieId
+          title: watchlistTitle,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        alert("Added to watchlist!");
+        setShowWatchlistModal(false);
+        setSelectedWatchlist("");
+        setNewWatchlistName("");
+      } else {
+        alert(json.message || "Failed to add to watchlist");
+      }
+    } catch (error) {
+      console.error("Error adding to watchlist:", error);
+      alert("Error adding to watchlist");
     }
   };
 
@@ -268,12 +353,40 @@ const SeriesDetailsPage = () => {
     return <div className="error">Series not found</div>;
   }
 
+  // Group episodes by season
+  const episodesBySeason = {};
+  if (series.episodes && series.episodes.length > 0) {
+    series.episodes.forEach((episode) => {
+      let seasonNum =
+        episode.seasonnumber ||
+        episode.seasonno ||
+        episode.season_number ||
+        episode.seasonid;
+
+      if (!seasonNum && series.seasons && episode.seasonid) {
+        const season = series.seasons.find(
+          (s) => s.seasonid === episode.seasonid,
+        );
+        seasonNum = season ? season.seasonnumber || season.seasonno : null;
+      }
+
+      if (!seasonNum) {
+        seasonNum = "Unknown";
+      }
+
+      if (!episodesBySeason[seasonNum]) {
+        episodesBySeason[seasonNum] = [];
+      }
+      episodesBySeason[seasonNum].push(episode);
+    });
+  }
+
   return (
     <div className="series-details-page">
       {/* Back Button */}
       <button className="back-btn" onClick={() => navigate("/series")}>
         <ArrowLeft size={20} />
-        <span>Back to Series</span>
+        <span>Back to Home</span>
       </button>
 
       {/* Hero Section */}
@@ -298,18 +411,20 @@ const SeriesDetailsPage = () => {
 
           <div className="series-info-hero">
             <h1 className="series-title">{series.title}</h1>
-            <p className="series-tagline">{series.overview}</p>
+            <p className="series-tagline">"{series.overview}"</p>
 
             <div className="series-meta">
               <span className="rating">
                 <Star size={20} fill="currentColor" />
                 {series.rating}/10
               </span>
-              <span className="year">
-                📅 {series.releaseyear || series.year}
+              <span className="year-range">
+                📅 {series.startyear || series.releaseyear} -{" "}
+                {series.isongoing ? "Present" : series.endyear || "Ended"}
               </span>
               <span className="seasons">
-                📺 {series.total_seasons || series.seasons?.length || "N/A"} Seasons
+                📺 {series.seasons?.length || series.total_seasons || "N/A"}{" "}
+                Seasons
               </span>
               <span className="language">🌐 {series.language}</span>
             </div>
@@ -324,9 +439,15 @@ const SeriesDetailsPage = () => {
             </div>
 
             <div className="action-buttons">
-              <button className="btn-secondary">
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  fetchUserWatchlists();
+                  setShowWatchlistModal(true);
+                }}
+              >
                 <Bookmark size={20} />
-                In Watchlist
+                Add to Watchlist
               </button>
               <button className="btn-icon">
                 <Share2 size={20} />
@@ -362,12 +483,6 @@ const SeriesDetailsPage = () => {
           onClick={() => setActiveTab("awards")}
         >
           Awards
-        </button>
-        <button
-          className={`tab ${activeTab === "reviews" ? "active" : ""}`}
-          onClick={() => setActiveTab("reviews")}
-        >
-          Reviews
         </button>
       </div>
 
@@ -406,7 +521,7 @@ const SeriesDetailsPage = () => {
                 <div className="detail-item">
                   <span className="label">Total Episodes</span>
                   <span className="value">
-                    {series.episodes?.length || "N/A"}
+                    {series.episodes?.length || series.total_episodes || "N/A"}
                   </span>
                 </div>
               </div>
@@ -416,77 +531,286 @@ const SeriesDetailsPage = () => {
 
         {activeTab === "episodes" && (
           <div className="episodes-section">
-            <div className="section-card">
-              <h2>📺 Episodes</h2>
-              {series.seasons && series.seasons.length > 0 ? (
-                series.seasons.map((season) => (
-                  <div key={season.seasonid} className="season-container">
-                    <button
-                      className="season-header"
-                      onClick={() => toggleSeason(season.seasonnumber)}
-                    >
-                      <h3>
-                        Season {season.seasonnumber}
-                      </h3>
-                      <span className="episode-count">
-                        {series.episodes?.filter(
-                          (ep) => ep.seasonid === season.seasonid
-                        ).length || 0}{" "}
-                        Episodes
-                      </span>
-                      {expandedSeasons[season.seasonnumber] ? (
-                        <ChevronUp size={24} />
-                      ) : (
-                        <ChevronDown size={24} />
-                      )}
-                    </button>
+            <h2 className="section-title">Episodes</h2>
 
-                    {expandedSeasons[season.seasonnumber] && (
-                      <div className="episodes-list">
-                        {series.episodes
-                          ?.filter((ep) => ep.seasonid === season.seasonid)
-                          .map((episode) => (
-                            <div
-                              key={episode.episodeid}
-                              className="episode-card"
-                            >
-                              <div className="episode-number">
-                                E{episode.episodenumber}
-                              </div>
-                              <div className="episode-details">
-                                <h4>{episode.episodetitle}</h4>
-                                <div className="episode-meta">
-                                  <span>
-                                    <Clock size={16} />
-                                    {episode.duration || "N/A"} min
-                                  </span>
-                                  <span>
-                                    <Calendar size={16} />
-                                    {episode.releasedate
-                                      ? new Date(episode.releasedate).toLocaleDateString()
-                                      : "TBA"}
-                                  </span>
-                                  {episode.rating && (
-                                    <span>
-                                      <Star size={16} fill="currentColor" />
-                                      {episode.rating}/10
-                                    </span>
-                                  )}
+            {Object.keys(episodesBySeason).length > 0 ? (
+              Object.keys(episodesBySeason)
+                .sort((a, b) => a - b)
+                .map((seasonNum) => {
+                  const seasonEpisodes = episodesBySeason[seasonNum];
+
+                  return (
+                    <div key={seasonNum} className="season-container">
+                      <button
+                        className="season-header"
+                        onClick={() => toggleSeason(seasonNum)}
+                      >
+                        <h3>Season {seasonNum}</h3>
+                        <div className="season-info">
+                          {(() => {
+                            const season = series.seasons?.find(
+                              (s) =>
+                                String(s.seasonnumber || s.seasonno) ===
+                                String(seasonNum),
+                            );
+                            if (
+                              season &&
+                              season.avgrating &&
+                              parseFloat(season.avgrating) > 0
+                            ) {
+                              return (
+                                <span className="season-rating">
+                                  <Star size={16} fill="currentColor" />
+                                  {parseFloat(season.avgrating).toFixed(1)}/10
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                          <span className="episode-count">
+                            {seasonEpisodes.length} Episodes
+                          </span>
+                        </div>
+                        {expandedSeasons[seasonNum] ? (
+                          <ChevronUp size={24} />
+                        ) : (
+                          <ChevronDown size={24} />
+                        )}
+                      </button>
+
+                      {expandedSeasons[seasonNum] && (
+                        <div className="episodes-list">
+                          {seasonEpisodes.map((episode) => {
+                            const currentUser = JSON.parse(
+                              localStorage.getItem("user"),
+                            );
+                            const reviews =
+                              episodeReviews[episode.episodeid] || [];
+
+                            return (
+                              <div
+                                key={episode.episodeid}
+                                className="episode-card"
+                              >
+                                <div className="episode-main">
+                                  <div className="episode-number">
+                                    E
+                                    {episode.episodenumber || episode.episodeno}
+                                  </div>
+                                  <div className="episode-info">
+                                    <h4>
+                                      {episode.title || episode.episodetitle}
+                                    </h4>
+                                    <div className="episode-meta">
+                                      <span>
+                                        <Clock size={16} />
+                                        {episode.duration || "N/A"} min
+                                      </span>
+                                      {episode.avgrating &&
+                                        parseFloat(episode.avgrating) > 0 && (
+                                          <span>
+                                            <Star
+                                              size={16}
+                                              fill="currentColor"
+                                            />
+                                            {parseFloat(
+                                              episode.avgrating,
+                                            ).toFixed(1)}
+                                            /10
+                                          </span>
+                                        )}
+                                    </div>
+                                    <p className="episode-synopsis">
+                                      {episode.synopsis ||
+                                        episode.overview ||
+                                        "No synopsis available."}
+                                    </p>
+                                    <div className="episode-actions">
+                                      <button
+                                        className="review-btn"
+                                        onClick={() =>
+                                          handleReviewEpisode(episode.episodeid)
+                                        }
+                                      >
+                                        <MessageSquare size={16} />
+                                        Review ({reviews.length})
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                                <p className="episode-synopsis">
-                                  {episode.synopsis || "No synopsis available."}
-                                </p>
+
+                                {/* Review Form */}
+                                {reviewingEpisode === episode.episodeid && (
+                                  <div className="episode-review-form">
+                                    <h5>Write a Review for this Episode</h5>
+                                    <div className="rating-input">
+                                      <label>Your Rating</label>
+                                      <div className="star-rating">
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(
+                                          (star) => (
+                                            <button
+                                              key={star}
+                                              className={`star ${episodeRating >= star ? "active" : ""}`}
+                                              onClick={() =>
+                                                setEpisodeRating(star)
+                                              }
+                                            >
+                                              ⭐
+                                            </button>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+                                    <textarea
+                                      placeholder="Share your thoughts about this episode..."
+                                      value={episodeReviewText}
+                                      onChange={(e) =>
+                                        setEpisodeReviewText(e.target.value)
+                                      }
+                                      rows={4}
+                                    />
+                                    <div className="review-form-actions">
+                                      <button
+                                        className="submit-episode-review-btn"
+                                        onClick={handleSubmitEpisodeReview}
+                                      >
+                                        Submit Review
+                                      </button>
+                                      <button
+                                        className="cancel-review-btn"
+                                        onClick={handleCancelReview}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Reviews List */}
+                                {reviews.length > 0 && (
+                                  <div className="episode-reviews">
+                                    <h5>Reviews ({reviews.length})</h5>
+                                    {reviews.map((review) => {
+                                      const isMyReview =
+                                        currentUser &&
+                                        review.username ===
+                                          currentUser.username;
+                                      const isEditing =
+                                        editingReview?.reviewid ===
+                                        review.reviewid;
+
+                                      return (
+                                        <div
+                                          key={review.reviewid}
+                                          className="mini-review"
+                                        >
+                                          <div className="mini-review-header">
+                                            <strong>{review.username}</strong>
+                                            {!isEditing && (
+                                              <span className="mini-rating">
+                                                {renderStars(review.rating)}{" "}
+                                                {review.rating}/10
+                                              </span>
+                                            )}
+                                            <span className="mini-review-date">
+                                              {new Date(
+                                                review.date,
+                                              ).toLocaleDateString()}
+                                            </span>
+                                          </div>
+
+                                          {isEditing ? (
+                                            <div className="edit-review-section">
+                                              <div className="rating-input">
+                                                <label>Your Rating</label>
+                                                <div className="star-rating">
+                                                  {[
+                                                    1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                    10,
+                                                  ].map((star) => (
+                                                    <button
+                                                      key={star}
+                                                      className={`star ${editRating >= star ? "active" : ""}`}
+                                                      onClick={() =>
+                                                        setEditRating(star)
+                                                      }
+                                                    >
+                                                      ⭐
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                              <textarea
+                                                value={editText}
+                                                onChange={(e) =>
+                                                  setEditText(e.target.value)
+                                                }
+                                                rows={3}
+                                              />
+                                              <div className="review-form-actions">
+                                                <button
+                                                  className="submit-episode-review-btn"
+                                                  onClick={handleUpdateReview}
+                                                >
+                                                  Save
+                                                </button>
+                                                <button
+                                                  className="cancel-review-btn"
+                                                  onClick={handleCancelEdit}
+                                                >
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <p>{review.text}</p>
+                                              {isMyReview && (
+                                                <div className="review-actions-mini">
+                                                  <button
+                                                    className="edit-btn-mini"
+                                                    onClick={() =>
+                                                      handleEditReview(
+                                                        review,
+                                                        episode.episodeid,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Edit2 size={14} />
+                                                    Edit
+                                                  </button>
+                                                  <button
+                                                    className="delete-btn-mini"
+                                                    onClick={() =>
+                                                      handleDeleteReview(
+                                                        review.reviewid,
+                                                        episode.episodeid,
+                                                      )
+                                                    }
+                                                  >
+                                                    <Trash2 size={14} />
+                                                    Delete
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p className="no-data">No episodes information available.</p>
-              )}
-            </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+            ) : (
+              <p className="no-data">No episodes information available.</p>
+            )}
           </div>
         )}
 
@@ -499,8 +823,11 @@ const SeriesDetailsPage = () => {
                   series.actors.map((actor) => (
                     <div key={actor.actorid} className="cast-card">
                       <div className="actor-photo">
-                        {actor.actorphoto ? (
-                          <img src={actor.actorphoto} alt={actor.actorname} />
+                        {actor.actorphoto || actor.picture ? (
+                          <img
+                            src={actor.actorphoto || actor.picture}
+                            alt={actor.actorname}
+                          />
                         ) : (
                           <div className="photo-placeholder">👤</div>
                         )}
@@ -547,135 +874,53 @@ const SeriesDetailsPage = () => {
             </div>
           </div>
         )}
+      </div>
 
-        {activeTab === "reviews" && (
-          <div className="reviews-section">
-            <div className="section-card">
-              <h2>💬 Write a Series Review</h2>
-              <div className="review-form">
-                <div className="rating-input">
-                  <label>Your Rating</label>
-                  <div className="star-rating">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                      <button
-                        key={star}
-                        className={`star ${userRating >= star ? "active" : ""}`}
-                        onClick={() => setUserRating(star)}
-                      >
-                        ⭐
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <textarea
-                  placeholder="Share your thoughts about this series..."
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  rows={5}
-                />
-                <button
-                  className="submit-review-btn"
-                  onClick={handleSubmitReview}
-                >
-                  Submit Review
-                </button>
-              </div>
-            </div>
+      {/* Watchlist Modal - MOVED OUTSIDE all tabs */}
+      {showWatchlistModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowWatchlistModal(false)}
+        >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Add to Watchlist</h2>
 
-            <div className="section-card">
-              <h2>👥 User Reviews ({reviews.length})</h2>
-              <div className="reviews-list">
-                {reviews.length > 0 ? (
-                  reviews.map((review, idx) => {
-                    const user = JSON.parse(localStorage.getItem("user"));
-                    const isMyReview = user && review.username === user.username;
-                    const isEditing = editingReviewId === review.reviewid;
+            <select
+              value={selectedWatchlist}
+              onChange={(e) => setSelectedWatchlist(e.target.value)}
+            >
+              <option value="">Select a watchlist...</option>
+              {userWatchlists.map((wl) => (
+                <option key={wl.watchlistid} value={wl.watchlist_name}>
+                  {wl.watchlist_name} ({wl.item_count} items)
+                </option>
+              ))}
+              <option value="new">+ Create New Watchlist</option>
+            </select>
 
-                    return (
-                      <div key={idx} className="review-item">
-                        <div className="review-header">
-                          <h3>{review.username || "Anonymous User"}</h3>
-                          <div className="review-rating">
-                            {isEditing ? (
-                              <div className="edit-star-rating">
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                                  <button
-                                    key={star}
-                                    className={`star ${editRating >= star ? "active" : ""}`}
-                                    onClick={() => setEditRating(star)}
-                                  >
-                                    ⭐
-                                  </button>
-                                ))}
-                              </div>
-                            ) : (
-                              <>
-                                {renderStars(review.rating)} {review.rating}/10
-                              </>
-                            )}
-                          </div>
-                          <span className="review-date">
-                            {review.date ||
-                              new Date().toISOString().split("T")[0]}
-                          </span>
-                        </div>
+            {selectedWatchlist === "new" && (
+              <input
+                type="text"
+                placeholder="New watchlist name"
+                value={newWatchlistName}
+                onChange={(e) => setNewWatchlistName(e.target.value)}
+              />
+            )}
 
-                        {isEditing ? (
-                          <div className="edit-review-form">
-                            <textarea
-                              value={editText}
-                              onChange={(e) => setEditText(e.target.value)}
-                              rows={5}
-                              className="edit-textarea"
-                            />
-                            <div className="edit-actions">
-                              <button
-                                className="save-edit-btn"
-                                onClick={() => handleUpdateReview(review.reviewid)}
-                              >
-                                Save
-                              </button>
-                              <button
-                                className="cancel-edit-btn"
-                                onClick={handleCancelEdit}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="review-text">{review.text}</p>
-                        )}
-
-                        {isMyReview && !isEditing && (
-                          <div className="review-actions">
-                            <button
-                              className="edit-review-btn"
-                              onClick={() => handleEditReview(review)}
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              className="delete-review-btn"
-                              onClick={() => handleDeleteReview(review.reviewid)}
-                            >
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="no-data">
-                    No reviews yet. Be the first to review!
-                  </p>
-                )}
-              </div>
+            <div className="modal-actions">
+              <button className="btn-primary" onClick={handleAddToWatchlist}>
+                Add
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => setShowWatchlistModal(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
