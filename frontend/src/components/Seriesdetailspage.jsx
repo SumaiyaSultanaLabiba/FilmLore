@@ -56,7 +56,7 @@ const SeriesDetailsPage = () => {
 
   const fetchSeriesDetails = async () => {
     try {
-      const res = await fetch(`http://localhost:5004/api/series/${seriesId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/series/${seriesId}`);
       const json = await res.json();
 
       if (json.success) {
@@ -95,7 +95,7 @@ const SeriesDetailsPage = () => {
   const fetchEpisodeReviews = async (episodeId) => {
     try {
       const res = await fetch(
-        `http://localhost:5004/api/episode/${episodeId}/reviews`,
+        `${import.meta.env.VITE_API_URL}/api/episode/${episodeId}/reviews`,
       );
       const json = await res.json();
 
@@ -137,7 +137,7 @@ const SeriesDetailsPage = () => {
       }
 
       const res = await fetch(
-        `http://localhost:5004/api/episode/${reviewingEpisode}/reviews`,
+        `${import.meta.env.VITE_API_URL}/api/episode/${reviewingEpisode}/reviews`,
         {
           method: "POST",
           headers: {
@@ -191,7 +191,7 @@ const SeriesDetailsPage = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5004/api/episode/review/${editingReview.reviewid}`,
+        `${import.meta.env.VITE_API_URL}/api/episode/review/${editingReview.reviewid}`,
         {
           method: "PUT",
           headers: {
@@ -238,7 +238,7 @@ const SeriesDetailsPage = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5004/api/episode/review/${reviewId}`,
+        `${import.meta.env.VITE_API_URL}/api/episode/review/${reviewId}`,
         {
           method: "DELETE",
           headers: {
@@ -287,7 +287,7 @@ const SeriesDetailsPage = () => {
         return;
       }
 
-      const res = await fetch("http://localhost:5004/api/watchlists", {
+      const res = await fetch("${import.meta.env.VITE_API_URL}/api/watchlists", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
@@ -317,7 +317,7 @@ const SeriesDetailsPage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5004/api/watchlist/add", {
+      const res = await fetch("${import.meta.env.VITE_API_URL}/api/watchlist/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

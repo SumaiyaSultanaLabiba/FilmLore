@@ -62,7 +62,7 @@ const SeriesPage = () => {
   useEffect(() => {
     const fetchSeries = async () => {
       try {
-        const res = await fetch('http://localhost:5004/api/series');
+        const res = await fetch('${import.meta.env.VITE_API_URL}/api/series');
         const json = await res.json();
         
         if (json.success) {
@@ -79,7 +79,7 @@ const SeriesPage = () => {
           const seriesWithGenres = await Promise.all(
           seriesData.map(async (series) => {
             try {
-              const genreRes = await axios.get(`http://localhost:5004/api/genre/${series.id}`);
+              const genreRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/genre/${series.id}`);
               return { ...series, genres: genreRes.data.genres };
             } catch (err) {
               console.error(`Error fetching genres for series ${series.id}:`, err);
@@ -168,7 +168,7 @@ const handleSubmission = async (e) => {
   const submissionData = { ...formdata, UserName: user.username, Title: formdata.Title.trim(), Type: 'Series' };
 
   try {
-    await axios.post(`http://localhost:5004/api/submission/submit`, submissionData);
+    await axios.post(`${import.meta.env.VITE_API_URL}/api/submission/submit`, submissionData);
     setSuccess("Submission sent to admin for approval!");
     setFormdata({
       UserName: '',

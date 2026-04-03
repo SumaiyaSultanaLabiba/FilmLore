@@ -28,7 +28,7 @@ const BlogPostPage = () => {
 
   const fetchBlogPost = async () => {
     try {
-      const res = await fetch(`http://localhost:5004/api/blog/${blogId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/blog/${blogId}`);
       const json = await res.json();
 
       if (json.success) {
@@ -47,7 +47,7 @@ const BlogPostPage = () => {
       if (!token) return;
 
       const res = await fetch(
-        `http://localhost:5004/api/blog/${blogId}/reaction/check`,
+        `${import.meta.env.VITE_API_URL}/api/blog/${blogId}/reaction/check`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -74,7 +74,7 @@ const BlogPostPage = () => {
       }
 
       const res = await fetch(
-        `http://localhost:5004/api/blog/${blogId}/reaction`,
+        `${import.meta.env.VITE_API_URL}/api/blog/${blogId}/reaction`,
         {
           method: "POST",
           headers: {
@@ -113,7 +113,7 @@ const BlogPostPage = () => {
       }
 
       const res = await fetch(
-        `http://localhost:5004/api/blog/${blogId}/comment`,
+        `${import.meta.env.VITE_API_URL}/api/blog/${blogId}/comment`,
         {
           method: "POST",
           headers: {
@@ -147,7 +147,7 @@ const BlogPostPage = () => {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5004/api/blog/comment/${commentId}`,
+        `${import.meta.env.VITE_API_URL}/api/blog/comment/${commentId}`,
         {
           method: "DELETE",
           headers: {
@@ -176,7 +176,7 @@ const BlogPostPage = () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:5004/api/blog/${blogId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/blog/${blogId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

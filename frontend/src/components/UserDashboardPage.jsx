@@ -18,7 +18,7 @@ const UserDashboardPage = () => {
   useEffect(() => {
     const fetchMyBlogs = async () => {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/getMyBlogs', {UserName: currentUser.username});
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/getMyBlogs', {UserName: currentUser.username});
         setMyBlogs(res.data.myBlogs);
       } catch (err) {
         console.log('Failed to load my blogs.');
@@ -33,7 +33,7 @@ const UserDashboardPage = () => {
   useEffect(() => {
     const fetchMyComments = async () => {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/getMyComments', {UserName: currentUser.username});
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/getMyComments', {UserName: currentUser.username});
         setMyComments(res.data.comments);
       } catch (err) {
         console.log('Failed to load my comments.');
@@ -71,7 +71,7 @@ const UserDashboardPage = () => {
 
     if (field === "fullName") {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/editFullname', {
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editFullname', {
           UserName: userInfo.username,
           FullName: userInfo.fullName
         });
@@ -83,7 +83,7 @@ const UserDashboardPage = () => {
 
     if (field === "email") {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/editEmail', {
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editEmail', {
           UserName: userInfo.username,
           Email: userInfo.email
         });
@@ -95,7 +95,7 @@ const UserDashboardPage = () => {
 
     if (field === "dob") {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/editDOB', {
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/editDOB', {
           UserName: userInfo.username,
           DateOfBirth: userInfo.dob
         });
@@ -217,7 +217,7 @@ const UserDashboardPage = () => {
                     setUserInfo({ ...userInfo, profilePic: newPhotoLink });
                     setIsDialogOpen(false);
                     try {
-                    await axios.post("http://localhost:5004/api/user/editProfilePicture", {
+                    await axios.post("${import.meta.env.VITE_API_URL}/api/user/editProfilePicture", {
                     UserName: userInfo.username,
                     ProfilePicture: newPhotoLink,
                     });

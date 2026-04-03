@@ -22,7 +22,7 @@ const SubmissionsPage = () => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const res = await axios.get('http://localhost:5004/api/submission/getAllSubmissions');
+        const res = await axios.get('${import.meta.env.VITE_API_URL}/api/submission/getAllSubmissions');
         setSubmissions(res.data.submissions);
       } catch (err) {
         setError('Failed to load submissions.');
@@ -36,7 +36,7 @@ const SubmissionsPage = () => {
   const handleDecision = async (submissionId, decision) => {
     console.log("Sending:", { submissionId, adminUserName: user.username, decision });
     try {
-      await axios.post('http://localhost:5004/api/submission/approve', {
+      await axios.post('${import.meta.env.VITE_API_URL}/api/submission/approve', {
         submissionId,
         adminUserName: user.username,
         decision

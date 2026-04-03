@@ -62,7 +62,7 @@ const [success, setSuccess] = useState('');
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const res = await fetch('http://localhost:5004/api/movies');
+        const res = await fetch('${import.meta.env.VITE_API_URL}/api/movies');
         const json = await res.json();
         
         if (json.success) {
@@ -79,7 +79,7 @@ const [success, setSuccess] = useState('');
           const moviesWithGenres = await Promise.all(
           moviesData.map(async (movie) => {
             try {
-              const genreRes = await axios.get(`http://localhost:5004/api/genre/${movie.id}`);
+              const genreRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/genre/${movie.id}`);
               return { ...movie, genres: genreRes.data.genres }; // attach array of genres
             } catch (err) {
               console.error(`Error fetching genres for movie ${movie.id}:`, err);
@@ -178,7 +178,7 @@ const handleSubmission = async (e) => {
   const submissionData = { ...formdata, UserName: user.username, Title: formdata.Title.trim(), Type: 'Movie' };
 
   try {
-    await axios.post(`http://localhost:5004/api/submission/submit`, submissionData);
+    await axios.post(`${import.meta.env.VITE_API_URL}/api/submission/submit`, submissionData);
     setSuccess("Submission sent to admin for approval!");
     setFormdata({
       UserName: '',

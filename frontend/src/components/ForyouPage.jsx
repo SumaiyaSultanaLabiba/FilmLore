@@ -15,7 +15,7 @@ const ForyouPage = () => {
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        const res = await axios.post('http://localhost:5004/api/user/getSuggestions', {UserName: currentUser.username});
+        const res = await axios.post('${import.meta.env.VITE_API_URL}/api/user/getSuggestions', {UserName: currentUser.username});
         setSuggestions(res.data.suggestions);
       } catch (err) {
         console.log('Failed to load suggestions.');

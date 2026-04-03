@@ -29,7 +29,7 @@ const CreateBlogPage = () => {
 
   const fetchBlogPost = async () => {
     try {
-      const res = await fetch(`http://localhost:5004/api/blog/${blogId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/blog/${blogId}`);
       const json = await res.json();
 
       if (json.success) {
@@ -65,8 +65,8 @@ const CreateBlogPage = () => {
     try {
       const token = localStorage.getItem("token");
       const url = isEditMode
-        ? `http://localhost:5004/api/blog/${blogId}`
-        : "http://localhost:5004/api/blog";
+        ? `${import.meta.env.VITE_API_URL}/api/blog/${blogId}`
+        : "${import.meta.env.VITE_API_URL}/api/blog";
 
       const method = isEditMode ? "PUT" : "POST";
 
